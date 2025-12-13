@@ -40,5 +40,9 @@ snapcraft -v
 The resulting snap file will be named something like:
 openpaperwork-snap_2.2.5_amd64.snap
 
+Install local snap-package
+```bash
+sudo snap install openpaperwork-snap_2.2.5_amd64.snap --dangerous
+```
 
 
