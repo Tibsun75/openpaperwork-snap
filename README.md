@@ -13,6 +13,9 @@ This repository contains an **unofficial Snap package** of [OpenPaperwork](https
 
 You can install the Snap from the Snap Store:
 
+[![Get it from the Snap Store](https://snapcraft.io/en/dark/install.svg)](https://snapcraft.io/openpaperwork-snap)
+
+
 ```bash
 sudo snap install openpaperwork-snap
 ```
