@@ -1,0 +1,131 @@
+name: openpaperwork
+base: core24
+version: "2.2.5"
+summary: Personal document manager
+description: |
+  Unofficial Snap of OpenPaperwork, a personal document manager for Linux. 
+  Scan, organize, and search documents with OCR. This Snap includes the full 
+  Tesseract OCR (`tesseract-ocr-all`) for all languages.
+  Start tagging your documents and openpaperworks will automatically 
+  apply add smart tags to future documents, this makes organization almost magical.
+    
+title: OpenPaperwork
+license: GPL-3.0-or-later
+website: https://github.com/Tibsun75/openpaperwork-snap
+issues: https://github.com/Tibsun75/openpaperwork-snap/issues
+
+grade: stable
+confinement: strict
+
+# Layouts mappen die internen Snap-Pfade auf Standard-Systempfade, 
+# damit SANE die Backends und Konfigurationen findet.
+layout:
+  /etc/sane.d:
+    bind: $SNAP/etc/sane.d
+  /usr/lib/x86_64-linux-gnu/sane:
+    bind: $SNAP/usr/lib/x86_64-linux-gnu/sane
+
+apps:
+  paperwork:
+    command: bin/paperwork-gtk
+    extensions: [gnome]
+    environment:
+      TESSDATA_PREFIX: $SNAP/usr/share/tesseract-ocr/5/tessdata
+      # SANE Variablen
+      SANE_CONFIG_DIR: /etc/sane.d
+      SANE_BACKENDS_DIR: /usr/lib/x86_64-linux-gnu/sane
+      # Pfad-Erweiterung für Bibliotheken
+      LD_LIBRARY_PATH: /usr/lib/x86_64-linux-gnu/sane:$SNAP/usr/lib/x86_64-linux-gnu/libproxy:$LD_LIBRARY_PATH
+      
+     
+    plugs:
+      - avahi-control
+      - avahi-observe
+      - cups-control
+      - desktop
+      - desktop-legacy
+      - gsettings
+      - hardware-observe
+      - home
+      - io-ports-control
+      - locale-control
+      - log-observe
+      - network
+      - network-bind
+      - network-control
+      - network-manager
+      - network-observe
+      - removable-media
+      - raw-input
+      - raw-usb
+      - process-control
+      - system-observe
+      - upower-observe
+      - unity7
+      - wayland
+      - x11
+
+    slots:
+      - dbus-work-openpaper
+
+slots:
+  dbus-work-openpaper:
+    interface: dbus
+    bus: session
+    name: work.openpaper.Paperwork
+
+parts:
+  paperwork:
+    plugin: python
+    source: https://gitlab.gnome.org/World/OpenPaperwork/paperwork.git
+    source-type: git
+    source-branch: master
+
+    python-packages:
+      - paperwork-backend
+      - paperwork-gtk
+      - pyinsane
+
+    build-packages:
+      - libinsane-dev
+      - libsane-dev
+      - libtesseract-dev
+      - python3-dev
+      - gcc
+      - g++
+
+    stage-packages:
+      - python3-gi
+      - python3-cairo
+      - python3-dbus
+      - python3-gi-cairo
+      - gir1.2-gtk-3.0
+      - gir1.2-gdkpixbuf-2.0
+      - gir1.2-pango-1.0
+      - gir1.2-libinsane-1.0
+      - libsane1
+      - libinsane1
+      - libsane-common
+      - sane-utils
+      - sane-airscan
+      - libsane-hpaio
+      - hplip
+      - ca-certificates
+      - glib-networking
+      - libproxy1v5
+      - libproxy1-plugin-gsettings
+      - libproxy1-plugin-networkmanager
+      - libpoppler-glib8
+      - libpoppler-cpp0v5
+      - tesseract-ocr-all
+ 
+
+    override-build: |
+      craftctl default
+      # Aktiviert das airscan backend in der SANE Konfiguration
+      if [ -f $CRAFT_PART_INSTALL/etc/sane.d/dll.conf ]; then
+        echo "airscan" >> $CRAFT_PART_INSTALL/etc/sane.d/dll.conf
+      fi
+
+    prime:
+      - "*"
