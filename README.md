@@ -22,7 +22,7 @@ sudo snap install openpaperwork-snap
 
 ## Build your Snap Package
 
-# Clone the repository
+Clone the repository
 
 ```bash
 git clone https://github.com/Tibsun75/openpaperwork-snap.git
