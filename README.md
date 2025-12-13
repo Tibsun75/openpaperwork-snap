@@ -32,7 +32,7 @@ sudo snap install snapcraft --classic
 ```
 Build the snap
 ```bash
-snapcraft-v
+snapcraft -v
 ```
 The resulting snap file will be named something like:
 openpaperwork-snap_2.2.5_amd64.snap
