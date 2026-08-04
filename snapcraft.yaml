@@ -1,6 +1,6 @@
-name: openpaperwork
+name: openpaperwork-snap
 base: core24
-version: "2.2.5"
+version: "2.2.5-1"
 summary: Personal document manager
 description: |
   Unofficial Snap of OpenPaperwork, a personal document manager for Linux. 
@@ -13,6 +13,7 @@ title: OpenPaperwork
 license: GPL-3.0-or-later
 website: https://github.com/Tibsun75/openpaperwork-snap
 issues: https://github.com/Tibsun75/openpaperwork-snap/issues
+source-code: https://github.com/Tibsun75/openpaperwork-snap/snapcraft.yaml
 
 grade: stable
 confinement: strict
@@ -36,7 +37,9 @@ apps:
       SANE_BACKENDS_DIR: /usr/lib/x86_64-linux-gnu/sane
       # Pfad-Erweiterung für Bibliotheken
       LD_LIBRARY_PATH: /usr/lib/x86_64-linux-gnu/sane:$SNAP/usr/lib/x86_64-linux-gnu/libproxy:$LD_LIBRARY_PATH
-      
+      # ohne Portal
+      GTK_USE_PORTAL: "0"
+      GIO_USE_VFS: local
      
     plugs:
       - avahi-control
@@ -117,6 +120,7 @@ parts:
       - libproxy1-plugin-networkmanager
       - libpoppler-glib8
       - libpoppler-cpp0v5
+      - locales
       - tesseract-ocr-all
  
 
