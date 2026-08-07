@@ -1,25 +1,35 @@
 name: openpaperwork-snap
 base: core24
-version: "2.2.5-1"
+version: "2.2.5-4"
 summary: Personal document manager
 description: |
-  Unofficial Snap of OpenPaperwork, a personal document manager for Linux. 
-  Scan, organize, and search documents with OCR. This Snap includes the full 
+  Unofficial Snap of OpenPaperwork, a personal document manager for Linux.
+  Scan, organize, and search documents with OCR. This Snap includes the full
   Tesseract OCR (`tesseract-ocr-all`) for all languages.
-  Start tagging your documents and openpaperworks will automatically 
+  Start tagging your documents and openpaperworks will automatically
   apply add smart tags to future documents, this makes organization almost magical.
-    
+
+  Start CLI with: openpaperwork-snap.paperwork-cli
+  or: openpaperwork-snap.paperwork-json
+
+  This Snap includes a small YAD script for convenient mass export of
+  searchable PDFs from OpenPaperwork: openpaperwork-snap.export-pdf
+  
+  **Make sure to enable the necessary permissions** for this Snap.
+  Open Terminal and connect all plugs :
+  snap connections openpaperwork-snap | awk '$3 == "-" {print $2}' | while read plug; do sudo snap connect $plug; done
+
+
 title: OpenPaperwork
 license: GPL-3.0-or-later
 website: https://github.com/Tibsun75/openpaperwork-snap
 issues: https://github.com/Tibsun75/openpaperwork-snap/issues
 source-code: https://github.com/Tibsun75/openpaperwork-snap/snapcraft.yaml
-
 grade: stable
 confinement: strict
 
-# Layouts mappen die internen Snap-Pfade auf Standard-Systempfade, 
-# damit SANE die Backends und Konfigurationen findet.
+icon: snap/gui/openpaperwork-snap.png
+
 layout:
   /etc/sane.d:
     bind: $SNAP/etc/sane.d
@@ -29,19 +39,20 @@ layout:
 apps:
   paperwork:
     command: bin/paperwork-gtk
-    extensions: [gnome]
-    environment:
+    desktop: meta/gui/openpaperwork-snap.desktop
+    environment: &common-env
       TESSDATA_PREFIX: $SNAP/usr/share/tesseract-ocr/5/tessdata
-      # SANE Variablen
+      PATH: $SNAP/usr/bin:$SNAP/bin:$PATH
       SANE_CONFIG_DIR: /etc/sane.d
       SANE_BACKENDS_DIR: /usr/lib/x86_64-linux-gnu/sane
-      # Pfad-Erweiterung für Bibliotheken
-      LD_LIBRARY_PATH: /usr/lib/x86_64-linux-gnu/sane:$SNAP/usr/lib/x86_64-linux-gnu/libproxy:$LD_LIBRARY_PATH
-      # ohne Portal
+      LD_LIBRARY_PATH: $SNAP/usr/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu/sane:$SNAP/usr/lib/x86_64-linux-gnu/libproxy:$LD_LIBRARY_PATH
+      GI_TYPELIB_PATH: $SNAP/usr/lib/x86_64-linux-gnu/girepository-1.0
+      XDG_DATA_DIRS: $SNAP/usr/share:$XDG_DATA_DIRS
+      GTK_PATH: $SNAP/usr/lib/x86_64-linux-gnu/gtk-3.0
+      GDK_PIXBUF_MODULE_FILE: $SNAP/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders.cache
       GTK_USE_PORTAL: "0"
       GIO_USE_VFS: local
-     
-    plugs:
+    plugs: &common-plugs
       - avahi-control
       - avahi-observe
       - cups-control
@@ -58,6 +69,7 @@ apps:
       - network-control
       - network-manager
       - network-observe
+      - opengl
       - removable-media
       - raw-input
       - raw-usb
@@ -68,8 +80,21 @@ apps:
       - wayland
       - x11
 
-    slots:
-      - dbus-work-openpaper
+  paperwork-cli:
+    command: bin/paperwork-cli
+    environment: *common-env
+    plugs: *common-plugs
+
+  paperwork-json:
+    command: bin/paperwork-json
+    environment: *common-env
+    plugs: *common-plugs
+
+  export-pdf:
+    command: bin/export-pdf-gui.sh
+    desktop: meta/gui/openpaperwork-export-pdf.desktop
+    environment: *common-env
+    plugs: *common-plugs
 
 slots:
   dbus-work-openpaper:
@@ -83,12 +108,11 @@ parts:
     source: https://gitlab.gnome.org/World/OpenPaperwork/paperwork.git
     source-type: git
     source-branch: master
-
     python-packages:
       - paperwork-backend
       - paperwork-gtk
+      - paperwork-shell
       - pyinsane
-
     build-packages:
       - libinsane-dev
       - libsane-dev
@@ -96,7 +120,18 @@ parts:
       - python3-dev
       - gcc
       - g++
-
+      # ohne gnome-Extension:
+      - pkg-config
+      - meson
+      - ninja-build
+      - libcairo2-dev
+      - libgirepository1.0-dev
+      - libglib2.0-dev
+      - libffi-dev
+      - libgtk-3-dev
+      - gobject-introspection
+      - libgdk-pixbuf-2.0-dev
+      - libpango1.0-dev
     stage-packages:
       - python3-gi
       - python3-cairo
@@ -106,6 +141,15 @@ parts:
       - gir1.2-gdkpixbuf-2.0
       - gir1.2-pango-1.0
       - gir1.2-libinsane-1.0
+      - libgtk-3-0
+      - libgdk-pixbuf-2.0-0
+      - libpango-1.0-0
+      - libcairo2
+      - libglib2.0-0
+      - dconf-gsettings-backend
+      - gsettings-desktop-schemas
+      - shared-mime-info
+      - adwaita-icon-theme
       - libsane1
       - libinsane1
       - libsane-common
@@ -121,15 +165,29 @@ parts:
       - libpoppler-glib8
       - libpoppler-cpp0v5
       - locales
+      - tesseract-ocr
       - tesseract-ocr-all
- 
-
+      - yad
+      - img2pdf
     override-build: |
       craftctl default
-      # Aktiviert das airscan backend in der SANE Konfiguration
       if [ -f $CRAFT_PART_INSTALL/etc/sane.d/dll.conf ]; then
         echo "airscan" >> $CRAFT_PART_INSTALL/etc/sane.d/dll.conf
       fi
-
+      # GdkPixbuf-Loader-Cache aktualisieren (ohne gnome-Extension)
+      if [ -d $CRAFT_PART_INSTALL/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0 ]; then
+        export GDK_PIXBUF_MODULEDIR=$CRAFT_PART_INSTALL/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders
+        if command -v gdk-pixbuf-query-loaders >/dev/null 2>&1; then
+          gdk-pixbuf-query-loaders > $CRAFT_PART_INSTALL/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders.cache || true
+        fi
+      fi
     prime:
       - "*"
+
+  export-script:
+    plugin: dump
+    source: snap/scripts
+    organize:
+      export-pdf-gui.sh: bin/export-pdf-gui.sh
+    prime:
+      - bin/export-pdf-gui.sh
