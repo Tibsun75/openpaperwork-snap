@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=Openpaperwork Mass PDF Export
+Comment=Personal Document Manager
+Exec=openpaperwork-snap.export-pdf
+Icon=${SNAP}/meta/gui/openpaperwork-export-pdf.png
+Terminal=true
+Type=Application
+Categories=Office;Scanning
+StartupNotify=true

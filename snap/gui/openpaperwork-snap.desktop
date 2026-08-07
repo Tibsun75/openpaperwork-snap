@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=Openpaperwork Snap
+Comment=Personal Document Manager
+Exec=openpaperwork-snap.paperwork
+Icon=${SNAP}/meta/gui/openpaperwork-snap.png
+Terminal=true
+Type=Application
+Categories=Office;Scanning
+StartupNotify=true
